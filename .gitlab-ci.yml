@@ -1,0 +1,50 @@
+image: node:latest
+
+before_script:
+  - apt-get update -qy
+  - apt-get install -y ruby-dev
+  - gem install dpl
+
+cache:
+  paths:
+    - node_modules/
+
+stages:
+  - build
+  - test
+  - staging
+
+build:
+  type: build
+  stage: build
+  script:
+    - yarn
+    - yarn build
+  only:
+    - /^feat\/.*/
+    - /^bug\/.*/
+    - master
+  except:
+    - /^docs\/.*/
+
+test:
+  type: test
+  stage: test
+  script:
+    - yarn
+    - yarn test
+  only:
+    - /^feat\/.*/
+    - /^bug\/.*/
+    - master
+  except:
+    - /^docs\/.*/
+
+staging:
+  type: deploy
+  stage: staging
+  image: ruby:latest
+  script:
+    - dpl --provider=heroku --app=$APP --api-key=$HEROKU_API_KEY
+  only:
+    - master
